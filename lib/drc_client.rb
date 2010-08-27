@@ -1,7 +1,14 @@
 # DeRose Connect Client (DRCClient) requires rubycas-client
 require 'casclient'
 require 'casclient/frameworks/rails/filter'
+
 module DRCClient
+
+  # Inclusion hook to make #current_user and #logged_in? // and #logged_in_drc?
+  # available as ActionView helper methods.
+  def self.included(base)
+    base.send :helper_method, :logged_in_drc?, :cas_is_pama_allowed?, :cas_has_padma_user?, :login_with_cas, :drc_logout_url, :drc_login_url
+  end
 
   def self.filter(opts={})
     gateway = opts.delete(:gateway)
@@ -21,8 +28,6 @@ module DRCClient
   def self.logout(controller,service=nil)
     CASClient::Frameworks::Rails::Filter.logout(controller,service)
   end
-
-  protected
 
   def current_drc_user
     return session[:cas_user]
@@ -77,10 +82,8 @@ module DRCClient
   def drc_logout_url
     return url_for({:controller => 'account', :action => 'logout_cas'})
   end
+end
 
-  # Inclusion hook to make #current_user and #logged_in? // and #logged_in_drc?
-  # available as ActionView helper methods.
-  def self.included(base)
-    base.send :helper_method, :logged_in_drc?, :cas_is_pama_allowed?, :cas_has_padma_user?, :login_with_cas, :drc_logout_url, :drc_login_url
-  end
+class ApplicationController < ActionController::Base
+  include DRCClient
 end

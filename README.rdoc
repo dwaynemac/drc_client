@@ -1,0 +1,8 @@
+= DeRose Connect Client
+
+Rails gem for interaction with DeRose Connect
+
+= Installation
+
+gem install drc_client
+
