@@ -24,9 +24,7 @@ module DRCClient
 
   def self.configure(configuration)
     @@base_url = configuration.delete(:base_url)
-
-
-    @@drc_config[:user_model] = configuration.delete(:user_model) || User
+    @@drc_config[:user_model] = configuration.delete(:user_model)
     @@drc_config[:drc_user_column] = configuration.delete(:drc_user_column) || :drc_user
     @@drc_config[:auth_attribute_name] = configuration.delete(:auth_attribute_name)
     @@drc_config[:required_access_level] = configuration.delete(:required_access_level)
@@ -73,6 +71,7 @@ module DRCClient
     # finds local user that matches logged in DRC user
     # return user's id
     def get_local_user_id
+      return nil if DRCClient.config[:user_model].nil?
       return nil unless logged_in_drc?
       user = DRCClient.config[:user_model].find(:first, :conditions => { DRCClient.config[:drc_user_column] => current_drc_user})
       if user
