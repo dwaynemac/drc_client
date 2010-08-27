@@ -4,6 +4,15 @@ require 'casclient/frameworks/rails/filter'
 
 module DRCClient
 
+  # These are initialized when you call configure
+  @@base_url = nil
+  @@drc_config = {
+    :user_model => nil,
+    :drc_user_column => nil,
+    :auth_attribute_name => nil,
+    :required_access_level => nil # none, student, teacher, director, federation_president
+  }
+
   def self.filter(opts={})
     gateway = opts.delete(:gateway)
     if gateway
@@ -13,74 +22,74 @@ module DRCClient
     end
   end
 
-  def self.configure(config)
-    base_url = config.delete(:base_url)
-    config.merge!({:cas_base_url => base_url, :extra_attributes_session_key => :cas_extra_attributes})
-    CASClient::Frameworks::Rails::Filter.configure(config)
+  def self.configure(configuration)
+    @@base_url = configuration.delete(:base_url)
+
+
+    @@drc_config[:user_model] = configuration.delete(:user_model) || User
+    @@drc_config[:drc_user_column] = configuration.delete(:drc_user_column) || :drc_user
+    @@drc_config[:auth_attribute_name] = configuration.delete(:auth_attribute_name)
+    @@drc_config[:required_access_level] = configuration.delete(:required_access_level)
+    configuration.merge!({:cas_base_url => @@base_url, :extra_attributes_session_key => :cas_extra_attributes})
+    CASClient::Frameworks::Rails::Filter.configure(configuration)
   end
 
   def self.logout(controller,service=nil)
     CASClient::Frameworks::Rails::Filter.logout(controller,service)
   end
 
+  def self.config
+    return @@drc_config
+  end
+  
   module HelperMethods
 
     def self.included(base)
-      base.send :helper_method, :logged_in_drc?, :cas_is_pama_allowed?, :cas_has_padma_user?, :login_with_cas, :drc_logout_url, :drc_login_url
+      base.send :helper_method, :logged_in_drc?, :cas_is_pama_allowed?, :drc_user_has_local_user?, :login_with_drc, :drc_logout_url, :drc_login_url
     end
 
     def current_drc_user
       return session[:cas_user]
     end
 
-    # check if session has CAS credentials
+    # check if session has DRC credentials
     def logged_in_drc?
       return !session[:cas_user].blank?
     end
 
-    # TODO this is app specific, refactor to allow usage in various apps
-    # checks if CAS credentials have access to PADMA
-    def cas_is_padma_allowed?
-      return (logged_in_drc? && !session[:cas_extra_attributes].blank? && session[:cas_extra_attributes]["padma_access"].to_s == "true")
+    # checks if DRC credentials have access to local application
+    def allowed_drc_user?
+      return false if !logged_in_drc?
+      # by default having a drc_user is enough
+      allowed = true
+      if DRCClient.config[:required_access_level]
+        allowed = true # TODO check drc_user has sufficient access_level
+      elsif DRCClient.config[:auth_attribute_name]
+        allowed =  (!session[:cas_extra_attributes].blank? && session[:cas_extra_attributes][DRCClient.config[:auth_attribute_name]].to_s == "true")
+      end
+      return allowed
     end
 
-    # TODO this is app specific, refactor to allow usage in various apps
-    # get padma-user with cas login
-    # returns User object or nil
-    def get_padma_user
+    # finds local user that matches logged in DRC user
+    # return user's id
+    def get_local_user_id
       return nil unless logged_in_drc?
-      return User.find_by_cas_login(session[:cas_user])
+      user = DRCClient.config[:user_model].find(:first, :conditions => { DRCClient.config[:drc_user_column] => current_drc_user})
+      if user
+        return user[:id]
+      else
+        return nil
+      end
     end
-
 
     # checks if cas_user matches any padma_user
-    def cas_has_padma_user?
-      return get_padma_user.nil?
+    def drc_user_has_local_user?
+      return get_local_user.nil?
     end
 
-    # TODO this is app specific, extract out from this lib.
-    # attempt login user using it's CAS credential
-    # returns true if achieved login, false if it didn't
-    def login_with_cas
-      if logged_in_drc? && cas_is_padma_allowed?
-	u = get_padma_user
-	self.current_user = u.nil?? :false : u
-	self.current_school = u.schools.last unless u.nil?
-	add_flash_message(:notice, I18n.t('cas_integration.logged_in_with_cas',
-					  :cas_user => current_drc_user,
-					  :drc_logout_url => drc_logout_url))
-      end
-      return logged_in?
-    end
-
-    # returns login url to CAS server.
+    # returns login url to DRC server.
     def drc_login_url
       return CASClient::Frameworks::Rails::Filter.login_url(self)
-    end
-
-    # TODO this is app specific, extract out from this lib.
-    def drc_logout_url
-      return url_for({:controller => 'account', :action => 'logout_cas'})
     end
   end
 end

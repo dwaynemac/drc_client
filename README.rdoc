@@ -39,6 +39,13 @@ before_filter DRCClient.filter(*options)
 === Options
 
 <tt>:gateway</tt> - if set true, DRC-connection won't be mandatory.
+<tt>:user_model</tt> - name of your user model, defaults to User
+<tt>:drc_user_column</tt> - name of the column of your user model that identifies its DRC user, defaults to drc_user
+<tt>:auth_attribute_name</tt> - boolean attribute that defines if user has access to your app. (must be configured on DRCServer)
+
+== OTher DRCClient Methods
+
+<tt>logout</tt> - destroys session and logs user out of DRCServer
 
 == Helpers Available with DRCClient::HelperMethods
 
@@ -49,5 +56,10 @@ logged_in_drc?
 drc_login_url
 
 logout_drc
+
+get_local_user_id
+
+drc_user_has_local_user?
+
 
 ...
