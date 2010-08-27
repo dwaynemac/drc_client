@@ -19,6 +19,10 @@ DRCClient.config(:base_url => "https://url-to-drc-server")
 
 == ApplicationController
 
+include DRCClient::HelperMethods
+
+and you may filter with
+
 before_filter DRCClient.filter
 
 or
