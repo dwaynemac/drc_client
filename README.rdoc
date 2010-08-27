@@ -2,17 +2,21 @@
 
 Rails gem for interaction with DeRose Connect
 
+= Dependencies
+
+(sudo) gem install echoe
+(sudo) gem install rubycas-client
+
 = Installation
 
 git clone git@github.com:dwaynemac/drc_client.git
 cd drc_client
-[sudo] rake install
+(sudo) rake install
 
 = Usage
 
 == Environement.rb
 
-config.gem "rubycas-client"
 config.gem "drc_client"
 
 DRCClient.config(:base_url => "https://url-to-drc-server")
@@ -21,15 +25,17 @@ DRCClient.config(:base_url => "https://url-to-drc-server")
 
 include DRCClient::HelperMethods
 
-and you may filter with
+== Filtering access
 
-before_filter DRCClient.filter
+Just write in your controllers (ApplicationController if filtering full application)
 
-or
+before_filter DRCClient.filter(*options)
 
-before_filter DRCCLient.filter(:gateway => true)
+=== Options
 
-== HelpersAvailable
+<tt>:gateway</tt> - if set true, DRC-connection won't be mandatory.
+
+== Helpers Available with DRCClient::HelperMethods
 
 current_drc_user
 logged_in_drc?
