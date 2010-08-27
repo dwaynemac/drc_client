@@ -11,6 +11,7 @@ Rails gem for interaction with DeRose Connect
 
 git clone git@github.com:dwaynemac/drc_client.git
 cd drc_client
+rake manifest
 (sudo) rake install
 
 = Usage
