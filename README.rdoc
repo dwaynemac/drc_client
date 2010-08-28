@@ -36,12 +36,16 @@ Just write in your controllers (ApplicationController if filtering full applicat
 
 before_filter DRCClient.filter(*options)
 
+# TODO a filter that considers both drc_logged_in? and drc_user_allowed?
+
 === Options
 
 <tt>:gateway</tt> - if set true, DRC-connection won't be mandatory.
 <tt>:user_model</tt> - name of your user model, defaults to User
 <tt>:drc_user_column</tt> - name of the column of your user model that identifies its DRC user, defaults to drc_user
-<tt>:auth_attribute_name</tt> - boolean attribute that defines if user has access to your app. (must be configured on DRCServer)
+<tt>:local_user_id_column</tt> - if your user model doesn't have an :id attribute set it's id_attribute_name here.
+<tt>:require_local_user</tt> - set this true if you users need a local_user on top of a DRC user. (if true set :user_model) DRCClient.filter WON'T CHECK THIS, USER drc_user_allowed?
+<tt>:require_access_level</tt> - not implemented yet - define access level needed to access your app. (:none, :student, :teacher, :director)
 
 == OTher DRCClient Methods
 
