@@ -24,7 +24,7 @@ rake manifest
 
 config.gem "drc_client"
 
-DRCClient.config(:base_url => "https://url-to-drc-server")
+DRCClient.configure(:base_url => "https://url-to-drc-server")
 
 == ApplicationController
 
@@ -41,10 +41,15 @@ before_filter DRCClient.filter(*options)
 === Options
 
 <tt>:gateway</tt> - if set true, DRC-connection won't be mandatory.
+
 <tt>:user_model</tt> - name of your user model, defaults to User
+
 <tt>:drc_user_column</tt> - name of the column of your user model that identifies its DRC user, defaults to drc_user
+
 <tt>:local_user_id_column</tt> - if your user model doesn't have an :id attribute set it's id_attribute_name here.
+
 <tt>:require_local_user</tt> - set this true if you users need a local_user on top of a DRC user. (if true set :user_model) DRCClient.filter WON'T CHECK THIS, USER drc_user_allowed?
+
 <tt>:require_access_level</tt> - not implemented yet - define access level needed to access your app. (:none, :student, :teacher, :director)
 
 == OTher DRCClient Methods
