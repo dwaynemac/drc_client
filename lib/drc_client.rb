@@ -41,11 +41,16 @@ module DRCClient
   def self.config
     return @@drc_config
   end
+
+  def self.mock_login(username)
+    CASClient::Frameworks::Rails::Filter.fake(username)
+  end
   
   module HelperMethods
 
     def self.included(base)
-      base.send :helper_method, :logged_in_drc?, :cas_is_pama_allowed?, :drc_user_has_local_user?, :login_with_drc, :drc_logout_url, :drc_login_url
+      base.send :helper_method, :logged_in_drc?, :cas_is_pama_allowed?,
+                :drc_user_has_local_user?, :login_with_drc, :drc_logout_url, :drc_login_url
     end
 
     def current_drc_user
@@ -54,16 +59,15 @@ module DRCClient
 
     # check if session has DRC credentials
     def logged_in_drc?
-      return !session[:cas_user].blank?
+      return !current_drc_user.blank?
     end
 
     # checks if DRC credentials have access to local application
     def allowed_drc_user?
       return false if !logged_in_drc?
-      allowed = true
-      # by default having a drc_user is enough
+      allowed = true # by default having a drc_user is enough
       allowed &&= drc_user_has_local_user? if DRCClient.config[:require_local_user]
-      allowed &&= true if DRCClient.config[:require_access_level]
+      allowed &&= true if DRCClient.config[:require_access_level] # TODO
       return allowed
     end
 
@@ -72,7 +76,9 @@ module DRCClient
     def get_local_user_id
       return nil if DRCClient.config[:user_model].nil?
       return nil unless logged_in_drc?
-      user = DRCClient.config[:user_model].find(:first, :select => DRCClient.config[:local_user_id_column], :conditions => { DRCClient.config[:drc_user_column] => current_drc_user})
+      user = DRCClient.config[:user_model].find(:first,
+                                              :select => DRCClient.config[:local_user_id_column],
+                                              :conditions => { DRCClient.config[:drc_user_column] => current_drc_user})
       if user
         return user[DRCClient.config[:local_user_id_column].to_sym]
       else
