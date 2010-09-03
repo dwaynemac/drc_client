@@ -5,8 +5,9 @@ require 'casclient/frameworks/rails/filter'
 module DRCClient
 
   # These are initialized when you call configure
-  @@base_url = nil
   @@drc_config = {
+    :base_url => nil,
+    :enable_single_sign_out => nil,
     :user_model => nil,
     :drc_user_column => nil,
     :local_user_id_column => nil,
@@ -24,13 +25,16 @@ module DRCClient
   end
 
   def self.configure(configuration)
-    @@base_url = configuration.delete(:base_url)
+    @@drc_config[:base_url] = configuration.delete(:base_url)
+    @@drc_config[:enable_single_sign_out] = configuration.delete(:enable_single_sign_out) || false
     @@drc_config[:user_model] = configuration.delete(:user_model)
     @@drc_config[:drc_user_column] = configuration.delete(:drc_user_column) || :drc_user
     @@drc_config[:require_local_user] = configuration.delete(:require_local_user)
     @@drc_config[:require_access_level] = configuration.delete(:require_access_level)
     @@drc_config[:local_user_id_column] = configuration.delete(:local_user_id_column) || :id
-    configuration.merge!({:cas_base_url => @@base_url})
+
+    configuration.merge!({:cas_base_url => @@drc_config[:base_url],
+                          :enable_single_sign_out => @@drc_config[:enable_single_sign_out]})
     CASClient::Frameworks::Rails::Filter.configure(configuration)
   end
 
@@ -49,7 +53,7 @@ module DRCClient
   module HelperMethods
 
     def self.included(base)
-      base.send :helper_method, :logged_in_drc?, :cas_is_pama_allowed?,
+      base.send :helper_method, :logged_in_drc?, :cas_is_pama_allowed?, :current_drc_user,
                 :drc_user_has_local_user?, :login_with_drc, :drc_logout_url, :drc_login_url
     end
 
@@ -95,5 +99,10 @@ module DRCClient
     def drc_login_url
       return CASClient::Frameworks::Rails::Filter.login_url(self)
     end
+    
+    def drc_logout_url
+      return DRCClient.config[:base_url]+"/logout" # TODO strip posible / at end of base_url
+    end
+    
   end
 end

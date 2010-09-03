@@ -42,6 +42,8 @@ before_filter DRCClient.filter(*options)
 
 <tt>:gateway</tt> - if set true, DRC-connection won't be mandatory.
 
+<tt>:enable_single_sign_out</tt> - if set true, when logged out from DRC you'll be logout from the application as well. REQUIRES: config.action_controller.session_store = :active_record_store in environment and disabling forgery_protection 
+
 <tt>:user_model</tt> - name of your user model, defaults to User
 
 <tt>:drc_user_column</tt> - name of the column of your user model that identifies its DRC user, defaults to drc_user
