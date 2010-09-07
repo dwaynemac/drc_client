@@ -1,6 +1,7 @@
 # DeRose Connect Client (DRCClient) requires rubycas-client
 require 'casclient'
 require 'casclient/frameworks/rails/filter'
+require 'i18n'
 
 module DRCClient
 
@@ -54,11 +55,16 @@ module DRCClient
 
     def self.included(base)
       base.send :helper_method, :logged_in_drc?, :cas_is_pama_allowed?, :current_drc_user,
-                :drc_user_has_local_user?, :login_with_drc, :drc_logout_url, :drc_login_url
+                :drc_user_has_local_user?, :login_with_drc, :drc_logout_url, :drc_login_url,
+                :drc_top_bar, :clear_local_drc_session
     end
 
     def current_drc_user
       return session[:cas_user]
+    end
+
+    def clear_local_drc_session
+      session[:cas_user] = nil
     end
 
     # check if session has DRC credentials
@@ -103,6 +109,17 @@ module DRCClient
     def drc_logout_url
       return DRCClient.config[:base_url]+"/logout" # TODO strip posible / at end of base_url
     end
-    
+
+    # helper for rendering top_bar
+    def drc_top_bar(local_logout_url=nil)
+      logout_href = (local_logout_url.nil?)? drc_logout_url : local_logout_url
+      ret = "<div style='width: 100%; height: 12px; top: 0; border-bottom: 1px solid grey; margin-bottom: 5px; padding-bottom: 5px; vertical-align: middle; font-size: 12px;'>"
+      ret << "<div style='text-align: left; float: left;'>DRC-Bar. (TODO: list available apps here)</div>"
+      ret << "<div style='text-align: right; float: right;'><strong>#{current_drc_user}</strong> | "
+      ret << "<a href='#{logout_href}'>#{I18n.t('logout', :default => "logout").capitalize}</a></div>"
+      ret << "</div>"
+      return ret
+    end
+
   end
 end
